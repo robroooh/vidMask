@@ -1,4 +1,4 @@
-function [ out ] = Hum_Segmentation( im_tobemask, im_background, opa1, opa2 )
+function [ out ] = HumanExtraction( im_tobemask, im_background, opa1, opa2 )
 % this function take the first argument to be the mask and the other one is
 % underneath this one
 

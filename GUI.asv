@@ -122,7 +122,7 @@ function genFrame(handles)
     opacityBg = str2double(get(handles.opaBg,'String'));
     
     if (isempty(vid1) ~= 1 && isempty(vid2) ~= 1)
-        out = HumanExtraction(img1,img2,opacityMask,opacityBg); 
+        out = Human_Extraction(img1,img2,opacityMask,opacityBg); 
         axes(handles.axes3);
         imshow(out);
     end
@@ -152,6 +152,11 @@ function frameSlider_Callback(hObject, eventdata, handles)
     imshow(img2);
     
     genFrame(handles);
+    %then get the masked image to be displayed
+%     out = Hum_Segmentation(preview1,preview2); 
+%     axes(handles.axes3);
+%     imshow(out);
+
 
 
 % --- Executes during object creation, after setting all properties.
@@ -176,7 +181,7 @@ function genVideoBtn_Callback(hObject, eventdata, handles)
     opacityMask = str2double(get(handles.opaMask,'String'));
     opacityBg = str2double(get(handles.opaBg,'String'));
     
-    VideoWorker(vid1, vid2 ,opacityMask, opacityBg);
+    Myvid(vid1, vid2 ,opacityMask, opacityBg);
 
 
 
@@ -187,17 +192,17 @@ function opaMask_Callback(hObject, eventdata, handles)
 
 % Hints: get(hObject,'String') returns contents of opaMask as text
 %        str2double(get(hObject,'String')) returns contents of opaMask as a double
-    opVal = get(hObject,'String');
-    opVal = str2double(opVal);
+opVal = get(hObject,'String');
+opVal = str2double(opVal);
 
-    if opVal > 1
-        opVal = 1.0;
-        set(hObject, 'String', num2str( opVal ));
-    elseif opVal < 0
-        opVal = 0.0;
-        set(hObject, 'String', num2str( opVal ));
-    end
-    genFrame(handles);
+if opVal > 1
+    opVal = 1.0;
+    set(hObject, 'String', num2str( opVal ));
+elseif opVal < 0
+    opVal = 0.0;
+    set(hObject, 'String', num2str( opVal ));
+end
+genFrame(handles);
 
 
 
@@ -222,17 +227,17 @@ function opaBg_Callback(hObject, eventdata, handles)
 
 % Hints: get(hObject,'String') returns contents of opaBg as text
 %        str2double(get(hObject,'String')) returns contents of opaBg as a double
-    opVal = get(hObject,'String');
-    opVal = str2double(opVal);
+opVal = get(hObject,'String');
+opVal = str2double(opVal);
 
-    if opVal > 1
-        opVal = 1.0;
-        set(hObject, 'String', num2str( opVal ));
-    elseif opVal < 0
-        opVal = 0.0;
-        set(hObject, 'String', num2str( opVal ));
-    end
-    genFrame(handles);
+if opVal > 1
+    opVal = 1.0;
+    set(hObject, 'String', num2str( opVal ));
+elseif opVal < 0
+    opVal = 0.0;
+    set(hObject, 'String', num2str( opVal ));
+end
+genFrame(handles);
 
 
 % --- Executes during object creation, after setting all properties.
