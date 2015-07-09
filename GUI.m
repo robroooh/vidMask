@@ -1,32 +1,11 @@
 function varargout = vid_slider_work(varargin)
 % VID_SLIDER_WORK MATLAB code for vid_slider_work.fig
-%      VID_SLIDER_WORK, by itself, creates a new VID_SLIDER_WORK or raises the existing
-%      singleton*.
-%
-%      H = VID_SLIDER_WORK returns the handle to a new VID_SLIDER_WORK or the handle to
-%      the existing singleton*.
-%
-%      VID_SLIDER_WORK('CALLBACK',hObject,eventData,handles,...) calls the local
-%      function named CALLBACK in VID_SLIDER_WORK.M with the given input arguments.
-%
-%      VID_SLIDER_WORK('Property','Value',...) creates a new VID_SLIDER_WORK or raises the
-%      existing singleton*.  Starting from the left, property value pairs are
-%      applied to the GUI before vid_slider_work_OpeningFcn gets called.  An
-%      unrecognized property name or invalid value makes property application
-%      stop.  All inputs are passed to vid_slider_work_OpeningFcn via varargin.
-%
-%      *See GUI Options on GUIDE's Tools menu.  Choose "GUI allows only one
-%      instance to run (singleton)".
-%
-% See also: GUIDE, GUIDATA, GUIHANDLES
 
-% Edit the above text to modify the response to help vid_slider_work
+% declare global images and video to use with processing
+% img1 is mask image, img2 is bg image
+% the same goes for video
 
-% Last Modified by GUIDE v2.5 10-Jul-2015 02:36:09
-
-% Begin initialization code - DO NOT EDIT
 global img1 img2;
-
 global vid1 vid2;
 
 gui_Singleton = 1;
@@ -50,39 +29,21 @@ end
 
 % --- Executes just before vid_slider_work is made visible.
 function vid_slider_work_OpeningFcn(hObject, eventdata, handles, varargin)
-% This function has no output args, see OutputFcn.
-% hObject    handle to figure
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    structure with handles and user data (see GUIDATA)
-% varargin   command line arguments to vid_slider_work (see VARARGIN)
-
-% Choose default command line output for vid_slider_work
 handles.output = hObject;
-
-% Update handles structure
 guidata(hObject, handles);
 
-% UIWAIT makes vid_slider_work wait for user response (see UIRESUME)
-% uiwait(handles.figure1);
 
-
-% --- Outputs from this function are returned to the command line.
 function varargout = vid_slider_work_OutputFcn(hObject, eventdata, handles) 
-% varargout  cell array for returning output args (see VARARGOUT);
-% hObject    handle to figure
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    structure with handles and user data (see GUIDATA)
-
-% Get default command line output from handles structure
 varargout{1} = handles.output;
 
 
 % --- Executes on button press in selectMaskBtn.
 function selectMaskBtn_Callback(hObject, eventdata, handles)
-% hObject    handle to selectMaskBtn (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    structure with handles and user data (see GUIDATA)
 
+    % For MASK
+    % create a gui to get the video file, then update the axis and set the
+    % min,max, val of frameSlider
+    
     global vid1 img1;
     filename = uigetfile('*.*');
     vid1 = VideoReader(filename);
@@ -101,9 +62,11 @@ function selectMaskBtn_Callback(hObject, eventdata, handles)
 
 % --- Executes on button press in selectBgBtn.
 function selectBgBtn_Callback(hObject, eventdata, handles)
-% hObject    handle to selectBgBtn (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    structure with handles and user data (see GUIDATA)
+
+    % For BACKGROUND
+    % create a gui to get the video file, then update the axis and set the
+    % min,max, val of frameSlider
+    
     global vid2 img2;
     filename = uigetfile('*.*');
     vid2 = VideoReader(filename);
@@ -116,12 +79,15 @@ function selectBgBtn_Callback(hObject, eventdata, handles)
 
     
 function genFrame(handles)
-    global img1 img2 vid1 vid2;
-    %get the opacity from the textbox
-    opacityMask = str2double(get(handles.opaMask,'String'));
-    opacityBg = str2double(get(handles.opaBg,'String'));
-    thre = round(get(handles.thresholdSlider,'Value'));
 
+    % generate preview frame to be at the preview Axis with current opacity
+    % and threshold values if vid1 & vid2 are not empty
+    
+    global img1 img2 vid1 vid2;
+    
+    opacityMask = get(handles.maskOpaSlider,'Value');
+    opacityBg = get(handles.bgOpaSlider,'Value');
+    thre = round(get(handles.thresholdSlider,'Value'));
     
     if (isempty(vid1) ~= 1 && isempty(vid2) ~= 1)
         out = HumanExtraction(img1,img2,opacityMask,opacityBg, thre); 
@@ -131,13 +97,15 @@ function genFrame(handles)
     
     
 function updateImg(handles)
-    global vid1 vid2 img1 img2;
+
+    %Just to update 2 Axes, set 2 axes as the frame we get
     
+    global vid1 vid2 img1 img2;
     val = round(get(handles.frameSlider,'Value'));
     img1 = read(vid1,val);
     img2 = read(vid2,val);
     
-    %set 2 axes as the frame we get
+    
     axes(handles.maskAxis);
     imshow(img1);
     axes(handles.bgAxis);
@@ -147,6 +115,10 @@ function updateImg(handles)
 
 % --- Executes on slider movement.
 function frameSlider_Callback(hObject, eventdata, handles)
+
+    % need slider to take almost-real time preview, so update 2 bg,mask
+    % axes then gen the previewFrame
+    
     updateImg(handles);
     genFrame(handles);
 
@@ -160,62 +132,24 @@ end
 
 % --- Executes on button press in genVideoBtn.
 function genVideoBtn_Callback(hObject, eventdata, handles)
+
+    %just passing parameters(Opacity of Mask,bg, threshold) to VideoWorker to create a video
+    
     global vid1 vid2;
     
-    opacityMask = str2double(get(handles.opaMask,'String'));
-    opacityBg = str2double(get(handles.opaBg,'String'));
+    opacityMask = get(handles.maskOpaSlider,'Value');
+    opacityBg = get(handles.bgOpaSlider,'Value');
     thre = round(get(handles.thresholdSlider,'Value'));
     
     VideoWorker(vid1, vid2 ,opacityMask, opacityBg, thre);
 
 
-
-function opaMask_Callback(hObject, eventdata, handles)
-    opVal = get(hObject,'String');
-    opVal = str2double(opVal);
-
-    if opVal > 1
-        opVal = 1.0;
-        set(hObject, 'String', num2str( opVal ));
-    elseif opVal < 0
-        opVal = 0.0;
-        set(hObject, 'String', num2str( opVal ));
-    end
-    genFrame(handles);
-
-
-
-
-function opaMask_CreateFcn(hObject, eventdata, handles)
-    if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
-        set(hObject,'BackgroundColor','white');
-    end
-
-
-
-function opaBg_Callback(hObject, eventdata, handles)
-    opVal = get(hObject,'String');
-    opVal = str2double(opVal);
-
-    if opVal > 1
-        opVal = 1.0;
-        set(hObject, 'String', num2str( opVal ));
-    elseif opVal < 0
-        opVal = 0.0;
-        set(hObject, 'String', num2str( opVal ));
-    end
-    genFrame(handles);
-
-
-% --- Executes during object creation, after setting all properties.
-function opaBg_CreateFcn(hObject, eventdata, handles)
-    if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
-        set(hObject,'BackgroundColor','white');
-    end
-
-
 % --- Executes on slider movement.
 function thresholdSlider_Callback(hObject, eventdata, handles)
+
+    %generate the previewFrame then set the threshold txt
+    
+    set(handles.threText,'String', round(get(hObject,'Value')));
     genFrame(handles);
     
 
@@ -230,3 +164,48 @@ function thresholdSlider_CreateFcn(hObject, eventdata, handles)
     set(hObject,'max',255);
     set(hObject,'value',150);
 
+
+% --- Executes on slider movement.
+function maskOpaSlider_Callback(hObject, eventdata, handles)
+
+    %generate the previewFrame then set the opacity mask txt
+
+    set(handles.maskSlideVal,'String', get(hObject,'Value'));
+    genFrame(handles);
+    
+
+
+% --- Executes during object creation, after setting all properties.
+function maskOpaSlider_CreateFcn(hObject, eventdata, handles)
+
+    %Here is just to scope a step size and max,min
+
+if isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
+    set(hObject,'BackgroundColor',[.9 .9 .9]);
+end
+    set(hObject,'min',0);
+    set(hObject,'max',1);
+    set(hObject,'value',0.8);
+
+
+
+% --- Executes on slider movement.
+function bgOpaSlider_Callback(hObject, eventdata, handles)
+
+    %generate the previewFrame then set the opacity background txt
+
+    set(handles.bgSlideVal,'String', get(hObject,'Value'));
+    genFrame(handles);
+
+
+% --- Executes during object creation, after setting all properties.
+function bgOpaSlider_CreateFcn(hObject, eventdata, handles)
+
+    %Here is just to scope a step size and max,min
+
+if isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
+    set(hObject,'BackgroundColor',[.9 .9 .9]);
+end
+    set(hObject,'min',0);
+    set(hObject,'max',1);
+    set(hObject,'value',0.5);
