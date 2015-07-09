@@ -22,7 +22,7 @@ function varargout = vid_slider_work(varargin)
 
 % Edit the above text to modify the response to help vid_slider_work
 
-% Last Modified by GUIDE v2.5 10-Jul-2015 02:00:36
+% Last Modified by GUIDE v2.5 10-Jul-2015 02:36:09
 
 % Begin initialization code - DO NOT EDIT
 global img1 img2;
@@ -89,7 +89,7 @@ function selectMaskBtn_Callback(hObject, eventdata, handles)
     set(handles.text1,'string',filename);
     
     img1 = read(vid1,1);
-    axes(handles.axes1);
+    axes(handles.maskAxis);
     imshow(img1);
     genFrame(handles);
     
@@ -110,7 +110,7 @@ function selectBgBtn_Callback(hObject, eventdata, handles)
     set(handles.text2,'string',filename);
     
     img2 = read(vid2,1);
-    axes(handles.axes2);
+    axes(handles.bgAxis);
     imshow(img2);
     genFrame(handles);
 
@@ -120,47 +120,39 @@ function genFrame(handles)
     %get the opacity from the textbox
     opacityMask = str2double(get(handles.opaMask,'String'));
     opacityBg = str2double(get(handles.opaBg,'String'));
+    thre = round(get(handles.thresholdSlider,'Value'));
+
     
     if (isempty(vid1) ~= 1 && isempty(vid2) ~= 1)
-        out = HumanExtraction(img1,img2,opacityMask,opacityBg); 
-        axes(handles.axes3);
+        out = HumanExtraction(img1,img2,opacityMask,opacityBg, thre); 
+        axes(handles.previewAxis);
         imshow(out);
     end
-        
+    
+    
+function updateImg(handles)
+    global vid1 vid2 img1 img2;
+    
+    val = round(get(handles.frameSlider,'Value'));
+    img1 = read(vid1,val);
+    img2 = read(vid2,val);
+    
+    %set 2 axes as the frame we get
+    axes(handles.maskAxis);
+    imshow(img1);
+    axes(handles.bgAxis);
+    imshow(img2);
         
 
 
 % --- Executes on slider movement.
 function frameSlider_Callback(hObject, eventdata, handles)
-% hObject    handle to frameSlider (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    structure with handles and user data (see GUIDATA)
-
-% Hints: get(hObject,'Value') returns position of slider
-%        get(hObject,'Min') and get(hObject,'Max') to determine range of slider
-
-    %get thevalue from slide bar then get the frame from 2 videos
-    global vid1 vid2 img1 img2;
-    val = round(get(hObject,'Value'));
-    img1 = read(vid1,val);
-    img2 = read(vid2,val);
-    
-    %set 2 axes as the frame we get
-    axes(handles.axes1);
-    imshow(img1);
-    axes(handles.axes2);
-    imshow(img2);
-    
+    updateImg(handles);
     genFrame(handles);
 
 
 % --- Executes during object creation, after setting all properties.
 function frameSlider_CreateFcn(hObject, eventdata, handles)
-% hObject    handle to frameSlider (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    empty - handles not created until after all CreateFcns called
-
-% Hint: slider controls usually have a light gray background.
 if isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
     set(hObject,'BackgroundColor',[.9 .9 .9]);
 end
@@ -168,25 +160,17 @@ end
 
 % --- Executes on button press in genVideoBtn.
 function genVideoBtn_Callback(hObject, eventdata, handles)
-% hObject    handle to genVideoBtn (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    structure with handles and user data (see GUIDATA)
     global vid1 vid2;
     
     opacityMask = str2double(get(handles.opaMask,'String'));
     opacityBg = str2double(get(handles.opaBg,'String'));
+    thre = round(get(handles.thresholdSlider,'Value'));
     
-    VideoWorker(vid1, vid2 ,opacityMask, opacityBg);
+    VideoWorker(vid1, vid2 ,opacityMask, opacityBg, thre);
 
 
 
 function opaMask_Callback(hObject, eventdata, handles)
-% hObject    handle to opaMask (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    structure with handles and user data (see GUIDATA)
-
-% Hints: get(hObject,'String') returns contents of opaMask as text
-%        str2double(get(hObject,'String')) returns contents of opaMask as a double
     opVal = get(hObject,'String');
     opVal = str2double(opVal);
 
@@ -201,27 +185,15 @@ function opaMask_Callback(hObject, eventdata, handles)
 
 
 
-% --- Executes during object creation, after setting all properties.
-function opaMask_CreateFcn(hObject, eventdata, handles)
-% hObject    handle to opaMask (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    empty - handles not created until after all CreateFcns called
 
-% Hint: edit controls usually have a white background on Windows.
-%       See ISPC and COMPUTER.
-if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
-    set(hObject,'BackgroundColor','white');
-end
+function opaMask_CreateFcn(hObject, eventdata, handles)
+    if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
+        set(hObject,'BackgroundColor','white');
+    end
 
 
 
 function opaBg_Callback(hObject, eventdata, handles)
-% hObject    handle to opaBg (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    structure with handles and user data (see GUIDATA)
-
-% Hints: get(hObject,'String') returns contents of opaBg as text
-%        str2double(get(hObject,'String')) returns contents of opaBg as a double
     opVal = get(hObject,'String');
     opVal = str2double(opVal);
 
@@ -237,12 +209,24 @@ function opaBg_Callback(hObject, eventdata, handles)
 
 % --- Executes during object creation, after setting all properties.
 function opaBg_CreateFcn(hObject, eventdata, handles)
-% hObject    handle to opaBg (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    empty - handles not created until after all CreateFcns called
+    if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
+        set(hObject,'BackgroundColor','white');
+    end
 
-% Hint: edit controls usually have a white background on Windows.
-%       See ISPC and COMPUTER.
-if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
-    set(hObject,'BackgroundColor','white');
-end
+
+% --- Executes on slider movement.
+function thresholdSlider_Callback(hObject, eventdata, handles)
+    genFrame(handles);
+    
+
+% --- Executes during object creation, after setting all properties.
+function thresholdSlider_CreateFcn(hObject, eventdata, handles)
+
+    if isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
+        set(hObject,'BackgroundColor',[.9 .9 .9]);
+    end
+    
+    set(hObject,'min',0);
+    set(hObject,'max',255);
+    set(hObject,'value',150);
+

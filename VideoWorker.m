@@ -1,4 +1,4 @@
-function [ output_args ] = VideoWorker( mask, bg, opaMask, opaBg )
+function [ output_args ] = VideoWorker( mask, bg, opaMask, opaBg, thre )
 
     tic
     [file,path] = uiputfile('RobrooSoSmart.avi','Save file name');
@@ -34,7 +34,7 @@ function [ output_args ] = VideoWorker( mask, bg, opaMask, opaBg )
         frameBg(k).cdata = read(bg,k);
 
         %use those two frame to merge and get the WOW result
-        frame = HumanExtraction(frameMask(k).cdata,frameBg(k).cdata, opaMask, opaBg);
+        frame = HumanExtraction(frameMask(k).cdata,frameBg(k).cdata, opaMask, opaBg, thre);
         writeVideo(writeObj,frame); % write into Video Object
     end
     

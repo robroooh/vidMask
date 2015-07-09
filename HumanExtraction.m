@@ -1,4 +1,4 @@
-function [ out ] = HumanExtraction( im_tobemask, im_background, opa1, opa2 )
+function [ out ] = HumanExtraction( im_tobemask, im_background, opa1, opa2, thre )
 % this function take the first argument to be the mask and the other one is
 % underneath this one
 
@@ -9,8 +9,8 @@ function [ out ] = HumanExtraction( im_tobemask, im_background, opa1, opa2 )
     [row,col,d] = size(im_tobemask);
 
     mask = im_mask_grayscale; %do the mask by thresholding
-    mask(mask<190) = 1;
-    mask(mask>=190) = 255;
+    mask(mask<thre) = 1;
+    mask(mask>=thre) = 255;
    
     out = ones(row,col,d); % prepare the output to be the same size 
 
