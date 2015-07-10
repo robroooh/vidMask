@@ -5,6 +5,7 @@ function [ output_args ] = VideoWorker( mask, bg, opaMask, opaBg, thre )
     [file,path] = uiputfile('RobrooSoSmart.avi','Save file name');
     PF = strcat(path,file);
     
+    
     % create the VideoWriter Object to save the video name Output
     writeObj = VideoWriter(PF); 
     
